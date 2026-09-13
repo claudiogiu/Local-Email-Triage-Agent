@@ -1,0 +1,38 @@
+[project]
+name = "Local-Email-Triage-Agent"
+version = "0.1.0"
+description = "A locally executed email triage agent integrating Ollama, LangGraph, and FastAPI, designed for autonomous classification, prioritization, and human-supervised response drafting."
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4==4.15.0",
+    "fastapi==0.141.1",
+    "httpx==0.28.1",
+    "imapclient==3.1.0",
+    "jinja2==3.1.6",
+    "langgraph==1.2.11",
+    "langgraph-checkpoint-sqlite==3.1.1",
+    "pydantic==2.13.5",
+    "python-multipart==0.0.20",
+    "sqlmodel==0.0.42",
+    "uvicorn[standard]==0.52.4",
+]
+
+[tool.ruff]
+src = ["src"]
+target-version = "py312"
+
+[tool.ruff.lint]
+ignore = [
+    "UP006",
+    "UP035",
+    "UP045",
+    "LOG014",
+    "BLE001",
+]
+
+[tool.uv]
+package = false
+dev-dependencies = [
+    "huggingface-hub==1.31.0",
+    "ruff==0.16.6",
+]

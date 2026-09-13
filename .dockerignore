@@ -1,0 +1,29 @@
+# Documentation and test material are not part of the runtime image.
+src/docs/
+
+# Local environment and secrets
+.env
+*.env
+!.env.example
+
+# Persistence artifacts
+*.db
+*.db-wal
+*.db-shm
+data/
+
+# Downloaded model artifacts
+.models/
+*.gguf
+
+# Python build and cache artifacts
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+*.egg-info/
+
+# Version control and tooling
+.git/
+.gitignore
+.github/

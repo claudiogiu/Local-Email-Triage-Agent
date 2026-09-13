@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mail | Local Email Triage Agent</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script src="/static/js/htmx.min.js"></script>
+</head>
+<body>
+    <div class="page">
+        <div class="top-bar">
+            <div>
+                <a class="back-link" href="/">Local Email Triage Agent</a>
+                <h1>Unread Arrivals</h1>
+                <div class="subtitle">Every unread message in your mailbox is listed below. Select one to
+                    have the agent read and triage it. Nothing is sent, labeled, archived, or deleted without
+                    your approval.</div>
+            </div>
+            <div class="top-bar-actions">
+                <a class="secondary home-button" href="/">Home</a>
+                <button class="secondary" hx-get="/partials/inbox" hx-target="#inbox" hx-swap="innerHTML">
+                    Refresh
+                </button>
+            </div>
+        </div>
+        <div id="inbox" hx-get="/partials/inbox" hx-trigger="load" hx-swap="innerHTML"></div>
+    </div>
+</body>
+</html>

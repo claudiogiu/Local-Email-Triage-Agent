@@ -1,0 +1,82 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - email_triage_internal_net
+
+  email_triage_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: email_triage_api_service
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+
+    env_file:
+      - .env
+
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - OLLAMA_CLASSIFIER_MODEL=${OLLAMA_CLASSIFIER_MODEL}
+      - OLLAMA_REASONING_MODEL=${OLLAMA_REASONING_MODEL}
+      - OLLAMA_TIMEOUT_SECONDS=${OLLAMA_TIMEOUT_SECONDS}
+      - IMAP_HOST=${IMAP_HOST}
+      - IMAP_PORT=${IMAP_PORT}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - IMAP_USERNAME=${IMAP_USERNAME}
+      - IMAP_PASSWORD=${IMAP_PASSWORD}
+      - IMAP_FOLDERS=${IMAP_FOLDERS}
+      - IMAP_ARCHIVE_FOLDER=${IMAP_ARCHIVE_FOLDER}
+      - IMAP_SPAM_FOLDER=${IMAP_SPAM_FOLDER}
+      - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS}
+      - DATABASE_PATH=${DATABASE_PATH}
+      - CHECKPOINT_PATH=${CHECKPOINT_PATH}
+      - DRY_RUN=${DRY_RUN}
+      - LOG_LEVEL=${LOG_LEVEL}
+
+    volumes:
+      - email_triage_data:/app/data
+
+    depends_on:
+      - ollama
+    networks:
+      - email_triage_internal_net
+
+  email_triage_ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: email_triage_ui_service
+    restart: unless-stopped
+    command: ["uvicorn", "src.ui.main:app", "--host", "0.0.0.0", "--port", "8080"]
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    environment:
+      - API_BASE_URL=${API_BASE_URL}
+      - LOG_LEVEL=${LOG_LEVEL}
+
+    depends_on:
+      - email_triage_api
+    networks:
+      - email_triage_internal_net
+
+networks:
+  email_triage_internal_net:
+    driver: bridge
+
+volumes:
+  ollama_data:
+    driver: local
+  email_triage_data:
+    driver: local

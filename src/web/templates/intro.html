@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Local Email Triage Agent</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+    <div class="intro">
+        <div class="intro-card">
+            <div class="intro-kicker">Fully Local. Nothing Leaves This Computer.</div>
+            <h1>Your Mail, Reviewed Right Here.</h1>
+            <p class="intro-lede">
+                An agent that reads your mailbox, understands what each message is about, and can prepare a
+                reply. It never touches anything without your explicit approval.
+            </p>
+
+            {% if mailbox.connected %}
+            <div class="connected-banner">
+                <span class="connected-badge"><span class="connected-dot"></span>Connected</span>
+                <span class="connected-email-badge">{{ mailbox.email }}</span>
+            </div>
+            <div class="intro-actions">
+                <a class="intro-cta" href="/inbox">Open Mail</a>
+                <form method="post" action="/logout">
+                    <button class="secondary logout-button" type="submit">Log Out</button>
+                </form>
+            </div>
+            {% else %}
+            {% if error %}
+            <div class="error-state">{{ error }}</div>
+            {% endif %}
+            <form class="signin-form" method="post" action="/connect">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="you@gmail.com" lang="en"
+                       autocomplete="username" value="{{ attempted_email or '' }}" required
+                       oninvalid="this.setCustomValidity(this.value ? 'Please enter a valid email address.' : 'Please enter your email address.')"
+                       oninput="this.setCustomValidity('')">
+
+                <label for="imap_password">IMAP App Password</label>
+                <input type="password" id="imap_password" name="imap_password" placeholder="Not your regular password"
+                       lang="en" autocomplete="current-password" required
+                       oninvalid="this.setCustomValidity('Please enter your IMAP app password.')"
+                       oninput="this.setCustomValidity('')">
+                <div class="field-hint">
+                    This is not your regular email password. Most providers require a separate app password for
+                    apps like this one. For a Gmail account, create one under Google Account, Security, App
+                    Passwords, and paste it here.
+                </div>
+
+                <button class="primary signin-button" type="submit">Connect My Mailbox</button>
+            </form>
+            {% endif %}
+            <div class="intro-footnote">Every label, every draft, every send passes through your approval.</div>
+        </div>
+    </div>
+</body>
+</html>

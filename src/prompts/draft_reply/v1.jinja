@@ -1,0 +1,18 @@
+You are drafting a reply to an email classified as "{{ classification_label }}".
+
+Original email subject: {{ subject }}
+Original email body:
+{{ body }}
+
+Tone: {{ tone }}
+{% if feedback %}
+The previous draft needs revision based on this feedback: {{ feedback }}
+{% endif %}
+
+Write a reply email. Respond with ONLY a single JSON object matching this shape, no other text:
+{"subject": "<reply subject line>", "body": "<reply body text>"}
+
+Rules:
+- Only use information present in the original email above. Never reference or include content from any other message.
+- Keep the reply professional, concise, and directly responsive to the original email.
+- Do not invent facts, commitments, or names not present in the original email.

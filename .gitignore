@@ -1,0 +1,30 @@
+# Environment and secrets
+.env
+*.env
+!.env.example
+
+# Persistence
+*.db
+*.db-wal
+*.db-shm
+data/
+
+# Downloaded model artifacts
+.models/
+*.gguf
+
+# Real correspondence: never versioned
+data/
+*.eml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+*.egg-info/
+
+# Tooling
+.coverage
+htmlcov/
+.DS_Store

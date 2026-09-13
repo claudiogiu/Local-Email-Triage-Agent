@@ -1,0 +1,26 @@
+<div class="card-status-root">
+<div class="card type-save-draft">
+    <div class="card-header">
+        <div>
+            <div class="from">{{ detail.sender }}</div>
+        </div>
+        <span class="type-tag">Reply Draft</span>
+    </div>
+
+    <p class="step-caption">Make any changes to the reply below, then save it. It will move on to the final
+        sending approval step after you save. This view will not refresh on its own, so your changes are safe
+        while you type.</p>
+
+    <form hx-post="/actions/{{ action.proposed_action_id }}/edit" hx-target="closest .card-status-root" hx-swap="outerHTML">
+        <input type="hidden" name="message_id" value="{{ message_id }}">
+        <label for="edit-subject">Subject</label>
+        <input type="text" id="edit-subject" name="subject" value="{{ action.payload.subject }}">
+        <label for="edit-body">Reply</label>
+        <textarea id="edit-body" name="body" rows="8">{{ action.payload.body }}</textarea>
+        <div class="actions">
+            <button class="primary" type="submit" hx-disabled-elt="this">Save This Reply</button>
+            <button class="secondary" type="button" hx-get="/cards/{{ message_id | urlencode }}/status" hx-target="closest .card-status-root" hx-swap="outerHTML">Cancel</button>
+        </div>
+    </form>
+</div>
+</div>

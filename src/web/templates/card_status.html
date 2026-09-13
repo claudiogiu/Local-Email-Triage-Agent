@@ -1,0 +1,135 @@
+{% set ms = detail.message_status %}
+<div class="card-status-root"
+     {% if polling %}hx-get="/cards/{{ message_id | urlencode }}/status?since={{ fingerprint | urlencode }}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+{% if not detail.found %}
+<div class="card">
+    <div class="empty-state">This message could not be found.</div>
+</div>
+{% else %}
+<div class="card{% if action %} type-{{ action.action_type|lower|replace('_', '-') }}{% elif phase == 'next_action' %} type-next-action{% elif phase == 'terminal' %} type-done{% else %} type-processing{% endif %}">
+    <div class="card-header">
+        <div>
+            <div class="from">{{ detail.sender }}</div>
+        </div>
+        {% if action %}
+        <span class="type-tag">
+            {% if action.action_type == 'APPLY_LABEL' %}Label
+            {% elif action.action_type == 'SAVE_DRAFT' %}Reply Draft
+            {% elif action.action_type == 'SEND_REPLY' %}Send Reply
+            {% else %}{{ action.action_type }}
+            {% endif %}
+        </span>
+        {% endif %}
+    </div>
+
+    <div class="subject">{{ detail.subject or "(No Subject)" }}</div>
+    <div class="body-preview">{{ detail.body_preview }}</div>
+
+    {% if action and action.action_type == 'APPLY_LABEL' %}
+    <p class="step-caption">The agent read this message and suggests the label below. Approve it to apply the
+        label to your mailbox, or reject it if the suggestion is wrong.</p>
+    <div class="decision-block">
+        Suggested Label: <span class="label-chip">{{ action.proposed_label }}</span>
+        {% if action.agreement_score is not none %}
+        <div class="score">Agreement Score: {{ "%.2f"|format(action.agreement_score) }}</div>
+        {% endif %}
+        {% if action.signals %}
+        <div class="signals">
+            {% for signal in action.signals %}
+            <span class="signal {{ signal.outcome }}">{{ signal.name }}: {{ signal.outcome }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="actions">
+        <button class="primary" hx-post="/actions/{{ action.proposed_action_id }}/approve?action_type=APPLY_LABEL" hx-swap="none" hx-disabled-elt="this">Approve Label</button>
+        <button class="danger" hx-post="/actions/{{ action.proposed_action_id }}/reject?action_type=APPLY_LABEL" hx-swap="none" hx-disabled-elt="this">Reject Label</button>
+    </div>
+
+    {% elif phase == 'next_action' %}
+    <p class="step-caption">
+        The label step is done. Now choose what should happen to this message.
+        {% if detail.priority_level %}The agent estimated its priority as {{ detail.priority_level|title }}.{% endif %}
+        {% if detail.requires_reply %}It looks like this message may need a reply.{% endif %}
+        Nothing happens until you pick one of the options below.
+    </p>
+    <form hx-post="/cards/{{ message_id | urlencode }}/next-action" hx-swap="none">
+        <input type="hidden" name="next_action" value="reply">
+        <div class="actions">
+            <button class="primary" type="submit" hx-disabled-elt="this">Write A Reply</button>
+        </div>
+    </form>
+    <div class="actions">
+        <form hx-post="/cards/{{ message_id | urlencode }}/next-action" hx-swap="none">
+            <input type="hidden" name="next_action" value="archive">
+            <button class="secondary" type="submit" hx-disabled-elt="this">Archive This Message</button>
+        </form>
+        <form hx-post="/cards/{{ message_id | urlencode }}/next-action" hx-swap="none">
+            <input type="hidden" name="next_action" value="mark_spam">
+            <button class="secondary" type="submit" hx-disabled-elt="this">Mark As Spam</button>
+        </form>
+        <form hx-post="/cards/{{ message_id | urlencode }}/next-action" hx-swap="none">
+            <input type="hidden" name="next_action" value="none">
+            <button class="secondary" type="submit" hx-disabled-elt="this">No Further Action</button>
+        </form>
+    </div>
+
+    {% elif action and action.action_type == 'SAVE_DRAFT' %}
+    <p class="step-caption">You asked for a reply. The local language model wrote the draft below. Approve it to
+        move on to sending, or edit it first.</p>
+    <div class="decision-block">
+        Draft Subject: <strong>{{ action.payload.subject }}</strong>
+        <div class="draft-body">{{ action.payload.body }}</div>
+    </div>
+    <div class="actions">
+        <button class="primary" hx-post="/actions/{{ action.proposed_action_id }}/approve?action_type=SAVE_DRAFT" hx-swap="none" hx-disabled-elt="this">Approve Draft</button>
+        <button class="secondary" hx-get="/cards/{{ message_id | urlencode }}/edit-draft" hx-target="closest .card-status-root" hx-swap="outerHTML">Edit This Draft</button>
+        <button class="danger" hx-post="/actions/{{ action.proposed_action_id }}/reject?action_type=SAVE_DRAFT" hx-swap="none" hx-disabled-elt="this">Reject Draft</button>
+    </div>
+
+    {% elif action and action.action_type == 'SEND_REPLY' %}
+    <p class="step-caption">This is the exact reply that will be sent from your mailbox if you approve. Read it
+        carefully. Nothing is sent until you approve here.</p>
+    <div class="decision-block">
+        <div class="send-line"><strong>To:</strong> {{ action.payload.recipient }}</div>
+        <div class="send-line"><strong>Subject:</strong> {{ action.payload.subject }}</div>
+        <div class="send-body">{{ action.payload.body }}</div>
+    </div>
+    <div class="actions">
+        <button class="primary" hx-post="/actions/{{ action.proposed_action_id }}/approve?action_type=SEND_REPLY" hx-swap="none" hx-disabled-elt="this">Send This Reply</button>
+        <button class="danger" hx-post="/actions/{{ action.proposed_action_id }}/reject?action_type=SEND_REPLY" hx-swap="none" hx-disabled-elt="this">Do Not Send</button>
+    </div>
+
+    {% elif phase == 'terminal' and ms == 'DONE' %}
+    <div class="conclusion-banner">
+        <div class="conclusion-check">&#10003;</div>
+        <div class="conclusion-title">All Done</div>
+        <div class="conclusion-subtitle">This message has been fully handled.</div>
+    </div>
+
+    {% elif phase == 'terminal' and ms == 'REJECTED' %}
+    <div class="status-banner failed">You rejected the suggested label. The agent took no further action.</div>
+
+    {% elif phase == 'terminal' and ms == 'FAILED' %}
+    <div class="status-banner failed">The agent could not finish reading this message automatically. You can
+        still archive it or mark it as spam below.</div>
+
+    {% else %}
+    <div class="status-banner processing">The agent is reading and classifying this message now. This card will
+        update on its own in a moment.</div>
+    {% endif %}
+
+    {% if phase == 'terminal' and ms == 'DONE' %}
+    <div class="secondary-actions actions">
+        <a class="secondary" href="/inbox">Back To Mail</a>
+    </div>
+    {% elif phase == 'terminal' %}
+    <div class="secondary-actions actions">
+        <a class="secondary" href="/inbox">Back To Mail</a>
+        <button class="secondary" hx-post="/messages/{{ message_id | urlencode }}/archive" hx-swap="none" hx-disabled-elt="this">Archive</button>
+        <button class="secondary" hx-post="/messages/{{ message_id | urlencode }}/mark-spam" hx-swap="none" hx-disabled-elt="this">Mark As Spam</button>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+</div>

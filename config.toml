@@ -1,0 +1,5 @@
+[policy.reply]
+max_length_chars = 1200
+
+[policy.send]
+auto_approve = false
