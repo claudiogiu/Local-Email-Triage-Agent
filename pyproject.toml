@@ -1,7 +1,7 @@
 [project]
 name = "Local-Email-Triage-Agent"
 version = "0.1.0"
-description = "A locally executed email triage agent integrating Ollama, LangGraph, and FastAPI, designed for autonomous classification, prioritization, and human-supervised response drafting."
+description = "A locally executed email triage agent integrating Ollama and LangGraph, designed for autonomous classification, prioritization, and human-supervised response drafting."
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4==4.15.0",
